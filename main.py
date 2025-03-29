@@ -3,7 +3,7 @@ import pandas as pd
 import json
 
 
-data = pd.read_csv("train_data.py")
+data = pd.read_csv(r"C:\Users\victo\Downloads\aspect_polarity_gisela.csv")
 
 url = "http://localhost:11434/api/generate"
 headers = {
