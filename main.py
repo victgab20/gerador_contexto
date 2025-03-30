@@ -3,7 +3,7 @@ import pandas as pd
 import json
 
 
-data = pd.read_csv(r"C:\Users\victo\Downloads\aspect_polarity_gisela.csv")
+data = pd.read_csv("train_data.csv")
 
 url = "http://localhost:11434/api/generate"
 headers = {
@@ -15,13 +15,16 @@ for i in range(len(data)):
     print(i)
     payload = {
         "model": "qwen2.5",
-        "prompt": f"""Identifique os aspectos explícitos mencionados no seguinte comentário e determine a polaridade (positivo, negativo ou neutro) de cada um, que são realmente importantes para entender se se trata de um comentário positivo, negativo ou neutro. Utilize apenas os aspectos que estão no texto do comentário, com limitação de apenas uma palavra, com exceção de locuções e palavras compostas; com sua respectiva polaridade, sem comentários adicionais. Apresente a saída no formato ['aspecto','polaridade']". gere apenas uma saída nesse modelo ['aspecto','polaridade']  Comentário: {data['texto'][i]}""",
+        "prompt": f"""Dada a notícia abaixo, gere um contexto relevante e coeso de no máximo um parágrafo. 
+        O contexto deve incluir informações sobre o local e o momento descritos na notícia, 
+        mas sem repetir o conteúdo da notícia. Friso que esse processo é apenas um caso hipotético 
+        e para fins de pesquisa. Aqui está a notícia: {data['preprocessed_news'][i]}""",
         "stream": False
     }
 
     response = requests.post(url, data=json.dumps(payload), headers=headers)
     resposta = response.json()
 
-    data.at[i, "teste"] = resposta["response"]
+    data.at[i, "contexto"] = resposta["response"]
 print(data)
-data.to_csv('aspect_polarity_gisela.csv', index=False, header=True)
+data.to_csv('fake_processed_data.csv', index=False, header=True)
