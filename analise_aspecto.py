@@ -1,34 +1,50 @@
 import pandas as pd
-from sklearn.metrics import precision_score, recall_score, f1_score, jaccard_score
 from sklearn.preprocessing import MultiLabelBinarizer
 
 df_humano = pd.read_csv(r"C:\Users\victo\Downloads\train2024 - train2024 (1).csv")
 df_llm = pd.read_csv("gisela_llm1.csv")
 
-def limpar(texto):
-    return str(texto).strip().lower()
+df_novo_llm = df_llm.groupby(['comentario'])['aspecto_llm'].apply(list).reset_index(name="aspec_list")
+df_novo_humano = df_humano.groupby(['texto'])['aspect'].apply(list).reset_index(name="aspec_list")
 
-df_humano["texto"] = df_humano["texto"].apply(limpar)
-df_humano["aspect"] = df_humano["aspect"].apply(limpar)
-df_llm["comentario"] = df_llm["comentario"].apply(limpar)
-df_llm["aspecto_llm"] = df_llm["aspecto_llm"].apply(limpar)
+df_novo_llm_polaridade = df_llm.groupby(['comentario'])['polaridade_llm'].apply(list).reset_index(name="polaridade_list")
+df_novo_humano_polaridade = df_humano.groupby(['texto'])['polarity'].apply(list).reset_index(name="polaridade_list")
 
-aspectos_humano = df_humano.groupby("texto")["aspect"].apply(lambda x: list(set(x))).reset_index()
-aspectos_llm = df_llm.groupby("comentario")["aspecto_llm"].apply(lambda x: list(set(x))).reset_index()
+df_novo_llm = pd.merge(df_novo_llm, df_novo_llm_polaridade, on='comentario', how='left')
+df_novo_humano = pd.merge(df_novo_humano, df_novo_humano_polaridade, on='texto', how='left')
 
-df_aspectos = pd.merge(aspectos_humano, aspectos_llm, left_on="texto", right_on="comentario", how="inner")
+print(df_novo_humano.head())
 
-mlb = MultiLabelBinarizer()
-y_true_bin = mlb.fit_transform(df_aspectos["aspect"])
-y_pred_bin = mlb.transform(df_aspectos["aspecto_llm"])
+TP = 0
+FP = 0
+FN = 0
 
-precision = precision_score(y_true_bin, y_pred_bin, average='micro')
-recall = recall_score(y_true_bin, y_pred_bin, average='micro')
-f1 = f1_score(y_true_bin, y_pred_bin, average='micro')
-jaccard = jaccard_score(y_true_bin, y_pred_bin, average='micro')
+for _, row in df_novo_humano.iterrows():
+    comentario_humano = row['texto']
+    aspectos_reais = set(row['aspec_list'])
+    
+    comentario_llm = df_novo_llm[df_novo_llm['comentario'] == comentario_humano]
+    
+    if not comentario_llm.empty:
+        aspectos_previstos = set(comentario_llm['aspec_list'].values[0])
+        
+        tp = len(aspectos_reais & aspectos_previstos)
+        TP += tp
 
-print("🔍 MÉTRICAS DE EXTRAÇÃO DE ASPECTOS (Multilabel por comentário)")
-print(f"Precision (micro): {precision:.2f}")
-print(f"Recall    (micro): {recall:.2f}")
-print(f"F1-score  (micro): {f1:.2f}")
-print(f"Jaccard   (micro): {jaccard:.2f}")
+        fp = len(aspectos_previstos - aspectos_reais)
+        FP += fp
+        
+        fn = len(aspectos_reais - aspectos_previstos)
+        FN += fn
+
+precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+
+print(f"TP: {TP}, FP: {FP}, FN: {FN}")
+print(f"Precisão: {precision:.2%}")
+print(f"Recall: {recall:.2%}")
+print(f"F1-Score: {f1_score:.2%}")
+
+
+
