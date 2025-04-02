@@ -1,5 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import MultiLabelBinarizer
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 df_humano = pd.read_csv(r"C:\Users\victo\Downloads\train2024 - train2024 (1).csv")
 df_llm = pd.read_csv("gisela_llm1.csv")
@@ -48,3 +50,22 @@ print(f"F1-Score: {f1_score:.2%}")
 
 
 
+conf_matrix = pd.DataFrame([
+    [TP, FP],
+    [FN, 0]  # sem TN nesse caso, pois só temos aspectos positivos
+], columns=['Previsto como aspecto', 'Previsto como não aspecto'],
+   index=['Realmente é aspecto', 'Realmente não é aspecto'])
+
+# Plot
+plt.figure(figsize=(7, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap="Blues", cbar=False)
+plt.title("Matriz de Confusão - Extração de Aspectos", fontsize=14)
+plt.xlabel("Predição")
+plt.ylabel("Valor Real")
+
+# Adiciona métricas no canto inferior
+plt.figtext(0.5, -0.1, f"Precisão: {precision:.2%}  |  Recall: {recall:.2%}  |  F1-Score: {f1_score:.2%}", 
+            wrap=True, horizontalalignment='center', fontsize=12)
+
+plt.tight_layout()
+plt.show()

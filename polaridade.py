@@ -1,5 +1,5 @@
-from sklearn.metrics import classification_report
-
+from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import precision_score, recall_score, f1_score
 
@@ -32,4 +32,14 @@ for i in range(len(df_novo_humano)):
 
 print(y_pred)
 print(y_true)
+
+labels =[1, -1, 0]
+
+# Exibe matriz de confusão
+cm = confusion_matrix(y_true, y_pred, labels=labels)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+disp.plot()
+plt.title("Matriz de Confusão")
+plt.show()
+
 print(classification_report(y_true, y_pred, target_names=['positivo', 'negativo', 'neutro'], digits=4))

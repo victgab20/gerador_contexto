@@ -62,7 +62,7 @@ plt.title("Matriz de Confusão - Polaridade LLM vs Humano")
 plt.show()
 
 
-top_aspectos_llm = df_llm_gwen['aspecto_llm'].value_counts().head(10)
+top_aspectos_llm = df_llm_gwen['aspecto_llm'].value_counts()
 
 top_aspectos_llm.plot(kind='barh')
 plt.xlabel('Frequência')
